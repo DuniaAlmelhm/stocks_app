@@ -11,21 +11,19 @@
           path: /home/git/stocks_app
         source: build
 
-    - name: Start the docker container
+    - name: Start the docker container # https://docs.ansible.com/projects/ansible/latest/collections/community/docker/docker_container_module.html
       community.docker.docker_container:
         name: stocks_app # name of the container
         image: stocks_app/intro
         state: started
-        exposed_ports: 8501
-        ports: "8081:8501"
-        debug: true # enable debug mode
+        ports: "8081:8501" # publish the listening port of the application in the container to a host port 8081
         detach: true # enable detach so the container keeps on running in the background. It is same as flag -d in docker cli
-        publish_all_ports: true
-        published_ports: 8501
+        publish_all_ports: true  # It publishes all ports the service in the container is listening on and maps them to a random host port or to the host port defined in parameter ports. It is the same as flag -p in docker cli
+
 
 #    - name: Remove container
 #      community.docker.docker_container:
-#        name: first_app
+#        name: stocks_app
 #        state: absent
 
 
