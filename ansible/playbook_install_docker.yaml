@@ -41,7 +41,8 @@
         state: started
         enabled: true
 
-    - name: Add user to Docker group # The flow simply is docker CLI > docker daemon socket > docker daemon. This ensures we can run docker commands without the need of using sudo for each command. Otherwise, we will get error "unable to connect to Docker daemon socket"
+    # This step is only needed when the user is not root. My user is root, so I technically don't need it, but I am doing it for extra caution.
+    - name: Add user to Docker group # This ensures we can run docker commands without the need of using sudo for each command. Otherwise, we will get error "unable to connect to Docker daemon socket"
       user: # https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/user_module.html
         name: root
         group: docker
