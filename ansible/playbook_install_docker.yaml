@@ -1,0 +1,56 @@
+- name: Install Docker
+  hosts: myhosts
+  remote_user: root
+  become: true # replaces sudo in $sudo apt. It is part of privilege escalation https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html
+
+  tasks:
+    - name: Install dependencies
+      apt:  # https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/apt_module.html
+        name: "{{ item }}" # it will be replaced by each dependency name (syntax of loop)
+        state: present # This is the default. It is condition that the dependencies must be on the machine. If not, it will install the missing dependencies, thereby ensuring current state is matching the desired state https://roshniwakodikar.medium.com/how-ansible-manages-state-ensuring-consistency-in-automation-86344b95ca65
+        update_cache: true # replaces the command $apt-get update
+      loop: # https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_loops.html
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+
+    - name: Add docker GPG key
+      apt_key: # https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/apt_key_module.html
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present # This is the default to make sure the key is added
+
+    - name: Add docker repository
+      apt_repository: # https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/apt_repository_module.html
+        repo: deb https://download.docker.com/linux/ubuntu noble stable  # noble since it is ubuntu 24.04 https://releases.ubuntu.com/. We can also run this $lsb_release -cs and it will show noble. deb is the archive type
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: "{{ item }}"
+        state: latest  # To install the latest version
+        update_cache: true
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+
+    - name: Check Docker is installed
+      service: # https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/service_module.html
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add user to Docker group # The flow simply is docker CLI > docker daemon socket > docker daemon. This ensures we can run docker commands without the need of using sudo for each command. Otherwise, we will get error "unable to connect to Docker daemon socket"
+      user: # https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/user_module.html
+        name: root
+        group: docker
+        append: true # default is false. It adds the user root to the group docker
+
+    - name: Check Docker is running
+      command: docker -v # https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/command_module.html
+      register: docker_version
+
+    - name: Print Docker version
+      debug: # https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/debug_module.html
+        msg: "docker version is {{docker_version}}"

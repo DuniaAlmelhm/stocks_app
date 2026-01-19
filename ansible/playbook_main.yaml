@@ -1,0 +1,39 @@
+- name: Run Stocks App
+  hosts: myhosts
+  remote_user: root
+
+  tasks:
+    - name: Build Docker image  # https://docs.ansible.com/projects/ansible/latest/collections/community/docker/docker_image_module.html
+      community.docker.docker_image:
+        name: stocks_app/intro
+        tag: latest
+        build:
+          path: /home/git/stocks_app
+        source: build
+
+    - name: Start the docker container
+      community.docker.docker_container:
+        name: stocks_app # name of the container
+        image: stocks_app/intro
+        state: started
+        exposed_ports: 8501
+        ports: "8081:8501"
+        debug: true # enable debug mode
+        detach: true # enable detach so the container keeps on running in the background. It is same as flag -d in docker cli
+        publish_all_ports: true
+        published_ports: 8501
+
+#    - name: Remove container
+#      community.docker.docker_container:
+#        name: first_app
+#        state: absent
+
+
+    - name: Check ports and containers running
+      command: docker ps
+      register: ports_containers
+
+
+    - name: Print message
+      debug:
+        msg: "The following ports and containers are running on the host {{ports_containers}}"

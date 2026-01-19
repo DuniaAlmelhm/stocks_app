@@ -1,0 +1,9 @@
+terraform/.terraform
+terraform/.terraform.lock.hcl
+
+terraform/terraform.tfstate
+terraform/*.tfvars
+
+ansible/playbook_copy_files.yaml
+
+.idea
